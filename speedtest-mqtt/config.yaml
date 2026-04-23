@@ -1,6 +1,6 @@
 name: "Speedtest MQTT"
 description: "Runs Ookla Speedtest CLI on a schedule and publishes results to MQTT with Home Assistant discovery support."
-version: "1.1.0"
+version: "1.2.0"
 slug: "speedtest_mqtt"
 init: false
 arch:
