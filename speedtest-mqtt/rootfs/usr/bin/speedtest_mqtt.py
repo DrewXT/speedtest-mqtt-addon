@@ -277,8 +277,8 @@ def do_run(client):
         log.info(
             "Published → %s/state  down=%.2f %s  up=%.2f %s  ping=%.1f ms",
             TOPIC_PREFIX,
-            state.get("download", 0), UOM,
-            state.get("upload", 0),   UOM,
+            state.get("download_speed", 0), UOM,
+            state.get("upload_speed", 0),   UOM,
             state.get("ping", 0),
         )
     else:
