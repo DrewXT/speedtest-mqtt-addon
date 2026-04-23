@@ -124,7 +124,7 @@ DEVICE_INFO = {
     "name":           "Speedtest MQTT",
     "model":          "Ookla Speedtest CLI",
     "manufacturer":   "Speedtest by Ookla",
-    "sw_version":     "1.4.0",
+    "sw_version":     "1.2.0",
 }
 
 
