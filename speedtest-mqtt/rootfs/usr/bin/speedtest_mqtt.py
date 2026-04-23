@@ -46,7 +46,7 @@ run_now_event = threading.Event()
 # ── Sensor definitions ─────────────────────────────────────────────────────────
 SENSORS = [
     {
-        "id":           "download",
+        "id":           "download_speed",
         "name":         "Download Speed",
         "device_class": "data_rate",
         "unit":         UOM,
@@ -55,7 +55,7 @@ SENSORS = [
         "state_class":  "measurement",
     },
     {
-        "id":           "upload",
+        "id":           "upload_speed",
         "name":         "Upload Speed",
         "device_class": "data_rate",
         "unit":         UOM,
