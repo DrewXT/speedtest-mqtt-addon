@@ -1,6 +1,0 @@
-#!/usr/bin/with-contenv bashio
-# shellcheck shell=bash
-set -e
-
-bashio::log.info "Starting Speedtest MQTT add-on…"
-exec python3 /usr/bin/speedtest_mqtt.py
