@@ -12,7 +12,7 @@ import logging
 import subprocess
 import sys
 import threading
-import time
+import time  # still used for interval sleep in main loop
 
 import paho.mqtt.client as mqtt
 
@@ -124,7 +124,7 @@ DEVICE_INFO = {
     "name":           "Speedtest MQTT",
     "model":          "Ookla Speedtest CLI",
     "manufacturer":   "Speedtest by Ookla",
-    "sw_version":     "1.1.0",
+    "sw_version":     "1.2.0",
 }
 
 
@@ -136,12 +136,18 @@ def build_client():
 
     client.will_set(f"{TOPIC_PREFIX}/status", payload="offline", retain=True)
 
+    # Signal main thread that connection is confirmed and discovery is done
+    connected_event = threading.Event()
+
     def on_connect(c, userdata, flags, rc):
         if rc == 0:
             log.info("Connected to MQTT broker at %s:%d", MQTT_HOST, MQTT_PORT)
             c.publish(f"{TOPIC_PREFIX}/status", payload="online", retain=True)
             c.subscribe(f"{TOPIC_PREFIX}/run")
             log.info("Subscribed to %s/run", TOPIC_PREFIX)
+            # Publish discovery now that we know the connection is live
+            publish_discovery(c)
+            connected_event.set()
         else:
             log.error("MQTT connection failed with code %d", rc)
 
@@ -155,6 +161,7 @@ def build_client():
     client.on_connect    = on_connect
     client.on_disconnect = on_disconnect
     client.on_message    = on_message
+    client._connected_event = connected_event   # expose so main() can wait on it
     return client
 
 
@@ -307,7 +314,7 @@ def stdin_listener():
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 def main():
-    log.info("Speedtest MQTT v1.1.0 starting (interval=%d min, uom=%s)", INTERVAL_MINUTES, UOM)
+    log.info("Speedtest MQTT v1.2.0 starting (interval=%d min, uom=%s)", INTERVAL_MINUTES, UOM)
 
     threading.Thread(target=stdin_listener, daemon=True).start()
 
@@ -315,8 +322,10 @@ def main():
     client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
     client.loop_start()
 
-    time.sleep(2)
-    publish_discovery(client)
+    # Wait until on_connect confirms broker is ready and discovery is published
+    log.info("Waiting for MQTT connection…")
+    if not client._connected_event.wait(timeout=30):
+        log.error("Timed out waiting for MQTT connection after 30 s — check broker settings")
 
     # Run immediately on startup
     do_run(client)
