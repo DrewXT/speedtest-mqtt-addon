@@ -1,0 +1,174 @@
+## Speedtest MQTT — Lovelace Card
+##
+## Requirements:
+##   - HACS frontend cards: apexcharts-card, mushroom
+##   - Install via HACS → Frontend
+##
+## To add to your dashboard:
+##   Dashboard → Edit → Add Card → Manual → paste the YAML below
+## ─────────────────────────────────────────────────────────────
+
+type: vertical-stack
+cards:
+
+  # ── Header: title + Run Now button ────────────────────────────────────────
+  - type: horizontal-stack
+    cards:
+      - type: custom:mushroom-title-card
+        title: 🌐 Speedtest
+        subtitle: >-
+          {% set s = states('sensor.speedtest_mqtt_status') %}
+          {% if s == 'running' %}⏳ Test in progress…
+          {% elif s == 'error'   %}⚠️ Last run failed
+          {% else %}Last run: {{ relative_time(states.sensor.speedtest_mqtt_download_speed.last_changed) }} ago
+          {% endif %}
+
+      - type: custom:mushroom-button-card
+        entity: button.speedtest_mqtt_run_now
+        name: Run Now
+        icon: mdi:play-circle-outline
+        tap_action:
+          action: call-service
+          service: button.press
+          service_data:
+            entity_id: button.speedtest_mqtt_run_now
+        layout: vertical
+        card_mod:
+          style: |
+            ha-card { --mush-card-primary-font-size: 12px; }
+
+  # ── Latest result summary (big numbers) ───────────────────────────────────
+  - type: horizontal-stack
+    cards:
+      - type: custom:mushroom-statistic-card
+        entity: sensor.speedtest_mqtt_download_speed
+        name: Download
+        icon: mdi:download-network
+        icon_color: blue
+        primary_info: state
+        secondary_info: name
+
+      - type: custom:mushroom-statistic-card
+        entity: sensor.speedtest_mqtt_upload_speed
+        name: Upload
+        icon: mdi:upload-network
+        icon_color: green
+        primary_info: state
+        secondary_info: name
+
+      - type: custom:mushroom-statistic-card
+        entity: sensor.speedtest_mqtt_ping
+        name: Ping
+        icon: mdi:lan-pending
+        icon_color: orange
+        primary_info: state
+        secondary_info: name
+
+      - type: custom:mushroom-statistic-card
+        entity: sensor.speedtest_mqtt_jitter
+        name: Jitter
+        icon: mdi:sine-wave
+        icon_color: purple
+        primary_info: state
+        secondary_info: name
+
+  # ── Download / Upload speed graph ─────────────────────────────────────────
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: Download & Upload Speed
+      show_states: true
+      colorize_states: true
+    graph_span: 24h
+    span:
+      end: now
+    apex_config:
+      chart:
+        height: 200
+      stroke:
+        curve: smooth
+        width: 2
+      fill:
+        type: gradient
+        gradient:
+          opacityFrom: 0.3
+          opacityTo: 0.05
+      tooltip:
+        x:
+          format: "dd MMM HH:mm"
+    series:
+      - entity: sensor.speedtest_mqtt_download_speed
+        name: Download
+        color: "#2196F3"
+        stroke_width: 2
+        show:
+          legend_value: true
+          in_header: true
+      - entity: sensor.speedtest_mqtt_upload_speed
+        name: Upload
+        color: "#4CAF50"
+        stroke_width: 2
+        show:
+          legend_value: true
+          in_header: true
+
+  # ── Ping / Jitter graph ───────────────────────────────────────────────────
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: Ping & Jitter
+      show_states: true
+      colorize_states: true
+    graph_span: 24h
+    span:
+      end: now
+    apex_config:
+      chart:
+        height: 180
+      stroke:
+        curve: smooth
+        width: 2
+      fill:
+        type: gradient
+        gradient:
+          opacityFrom: 0.25
+          opacityTo: 0.02
+      tooltip:
+        x:
+          format: "dd MMM HH:mm"
+    series:
+      - entity: sensor.speedtest_mqtt_ping
+        name: Ping (ms)
+        color: "#FF9800"
+        stroke_width: 2
+        show:
+          legend_value: true
+          in_header: true
+      - entity: sensor.speedtest_mqtt_jitter
+        name: Jitter (ms)
+        color: "#9C27B0"
+        stroke_width: 2
+        show:
+          legend_value: true
+          in_header: true
+
+  # ── Server info & ISP ─────────────────────────────────────────────────────
+  - type: entities
+    title: Connection Info
+    show_header_toggle: false
+    entities:
+      - entity: sensor.speedtest_mqtt_isp
+        name: ISP
+        icon: mdi:web
+      - entity: sensor.speedtest_mqtt_server_name
+        name: Server
+        icon: mdi:server-network
+      - entity: sensor.speedtest_mqtt_server_location
+        name: Location
+        icon: mdi:map-marker
+      - entity: sensor.speedtest_mqtt_server_id
+        name: Server ID
+        icon: mdi:identifier
+      - entity: sensor.speedtest_mqtt_status
+        name: Add-on Status
+        icon: mdi:information-outline
