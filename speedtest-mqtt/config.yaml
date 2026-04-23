@@ -21,7 +21,7 @@ options:
   mqtt_topic_prefix: "speedtest"
   interval_minutes: 30
   speedtest_server_id: 0
-  unit_of_measurement: "Mbit/s"
+  unit_of_measurement: "Mbps"
   discovery_prefix: "homeassistant"
   discovery_enabled: true
 
@@ -33,6 +33,6 @@ schema:
   mqtt_topic_prefix: str
   interval_minutes: int
   speedtest_server_id: int
-  unit_of_measurement: list(Mbit/s|Kbit/s|Bit/s)
+  unit_of_measurement: list(Mbps|Kbps|Bps)
   discovery_prefix: str
   discovery_enabled: bool
