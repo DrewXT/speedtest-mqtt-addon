@@ -1,8 +1,8 @@
-## Speedtest MQTT — Lovelace Card
+## Speedtest MQTT — Lovelace Card (native HA cards only)
 ##
 ## Requirements:
-##   - HACS frontend cards: apexcharts-card, mushroom
-##   - Install via HACS → Frontend
+##   - apexcharts-card via HACS (for the graphs)
+##   - No other custom cards needed
 ##
 ## To add to your dashboard:
 ##   Dashboard → Edit → Add Card → Manual → paste the YAML below
@@ -14,16 +14,15 @@ cards:
   # ── Header: title + Run Now button ────────────────────────────────────────
   - type: horizontal-stack
     cards:
-      - type: custom:mushroom-title-card
-        title: 🌐 Speedtest
-        subtitle: >-
-          {% set s = states('sensor.speedtest_mqtt_status') %}
-          {% if s == 'running' %}⏳ Test in progress…
-          {% elif s == 'error'   %}⚠️ Last run failed
-          {% else %}Last run: {{ relative_time(states.sensor.speedtest_mqtt_download_speed.last_changed) }} ago
-          {% endif %}
+      - type: heading
+        heading: 🌐 Speedtest
+        heading_style: title
+        badges:
+          - type: entity
+            entity: sensor.speedtest_mqtt_status
+            icon: mdi:information-outline
 
-      - type: custom:mushroom-button-card
+      - type: tile
         entity: button.speedtest_mqtt_run_now
         name: Run Now
         icon: mdi:play-circle-outline
@@ -32,45 +31,33 @@ cards:
           service: button.press
           service_data:
             entity_id: button.speedtest_mqtt_run_now
-        layout: vertical
-        card_mod:
-          style: |
-            ha-card { --mush-card-primary-font-size: 12px; }
 
-  # ── Latest result summary (big numbers) ───────────────────────────────────
+  # ── Latest result summary ─────────────────────────────────────────────────
   - type: horizontal-stack
     cards:
-      - type: custom:mushroom-statistic-card
+      - type: tile
         entity: sensor.speedtest_mqtt_download_speed
         name: Download
         icon: mdi:download-network
-        icon_color: blue
-        primary_info: state
-        secondary_info: name
+        color: blue
 
-      - type: custom:mushroom-statistic-card
+      - type: tile
         entity: sensor.speedtest_mqtt_upload_speed
         name: Upload
         icon: mdi:upload-network
-        icon_color: green
-        primary_info: state
-        secondary_info: name
+        color: green
 
-      - type: custom:mushroom-statistic-card
+      - type: tile
         entity: sensor.speedtest_mqtt_ping
         name: Ping
         icon: mdi:lan-pending
-        icon_color: orange
-        primary_info: state
-        secondary_info: name
+        color: orange
 
-      - type: custom:mushroom-statistic-card
+      - type: tile
         entity: sensor.speedtest_mqtt_jitter
         name: Jitter
         icon: mdi:sine-wave
-        icon_color: purple
-        primary_info: state
-        secondary_info: name
+        color: deep-purple
 
   # ── Download / Upload speed graph ─────────────────────────────────────────
   - type: custom:apexcharts-card
@@ -100,14 +87,12 @@ cards:
       - entity: sensor.speedtest_mqtt_download_speed
         name: Download
         color: "#2196F3"
-        stroke_width: 2
         show:
           legend_value: true
           in_header: true
       - entity: sensor.speedtest_mqtt_upload_speed
         name: Upload
         color: "#4CAF50"
-        stroke_width: 2
         show:
           legend_value: true
           in_header: true
@@ -140,14 +125,12 @@ cards:
       - entity: sensor.speedtest_mqtt_ping
         name: Ping (ms)
         color: "#FF9800"
-        stroke_width: 2
         show:
           legend_value: true
           in_header: true
       - entity: sensor.speedtest_mqtt_jitter
         name: Jitter (ms)
         color: "#9C27B0"
-        stroke_width: 2
         show:
           legend_value: true
           in_header: true
@@ -169,6 +152,3 @@ cards:
       - entity: sensor.speedtest_mqtt_server_id
         name: Server ID
         icon: mdi:identifier
-      - entity: sensor.speedtest_mqtt_status
-        name: Add-on Status
-        icon: mdi:information-outline
