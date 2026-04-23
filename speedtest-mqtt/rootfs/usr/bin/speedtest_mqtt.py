@@ -33,11 +33,11 @@ MQTT_PASS         = OPTIONS.get("mqtt_password", "")
 TOPIC_PREFIX      = OPTIONS.get("mqtt_topic_prefix", "speedtest").rstrip("/")
 INTERVAL_MINUTES  = int(OPTIONS.get("interval_minutes", 30))
 SERVER_ID         = int(OPTIONS.get("speedtest_server_id", 0))
-UOM               = OPTIONS.get("unit_of_measurement", "Mbps")
+UOM               = OPTIONS.get("unit_of_measurement", "Mbit/s")
 DISCOVERY_PREFIX  = OPTIONS.get("discovery_prefix", "homeassistant").rstrip("/")
 DISCOVERY_ENABLED = bool(OPTIONS.get("discovery_enabled", True))
 
-UNIT_DIVISORS = {"Bps": 1, "Kbps": 1_000, "Mbps": 1_000_000}
+UNIT_DIVISORS = {"Bit/s": 1, "Kbit/s": 1_000, "Mbit/s": 1_000_000}
 DIVISOR = UNIT_DIVISORS.get(UOM, 1_000_000)
 
 # ── Run-on-demand event ────────────────────────────────────────────────────────
