@@ -32,6 +32,14 @@ cards:
           service_data:
             entity_id: button.speedtest_mqtt_run_now
 
+  # ── Last run timestamp ─────────────────────────────────────────────────────
+  - type: entities
+    show_header_toggle: false
+    entities:
+      - entity: sensor.speedtest_mqtt_last_run
+        name: Last Run
+        icon: mdi:clock-outline
+
   # ── Latest result summary ─────────────────────────────────────────────────
   - type: horizontal-stack
     cards:
@@ -67,13 +75,12 @@ cards:
       show_states: true
       colorize_states: true
     graph_span: 24h
-    span:
-      end: now
+    update_interval: 60s
     apex_config:
       chart:
         height: 200
       stroke:
-        curve: smooth
+        curve: stepline
         width: 2
       fill:
         type: gradient
@@ -105,13 +112,12 @@ cards:
       show_states: true
       colorize_states: true
     graph_span: 24h
-    span:
-      end: now
+    update_interval: 60s
     apex_config:
       chart:
         height: 180
       stroke:
-        curve: smooth
+        curve: stepline
         width: 2
       fill:
         type: gradient
