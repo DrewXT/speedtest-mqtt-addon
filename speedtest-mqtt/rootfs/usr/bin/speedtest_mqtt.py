@@ -46,18 +46,18 @@ run_now_event = threading.Event()
 # ── Sensor definitions ─────────────────────────────────────────────────────────
 SENSORS = [
     {
-        "id":           "download_speed",
+        "id":           "download",
         "name":         "Download Speed",
-        "device_class": "data_rate",
+        "device_class": None,
         "unit":         UOM,
         "icon":         "mdi:download-network",
         "value_fn":     lambda r: round(r["download"]["bandwidth"] * 8 / DIVISOR, 2),
         "state_class":  "measurement",
     },
     {
-        "id":           "upload_speed",
+        "id":           "upload",
         "name":         "Upload Speed",
-        "device_class": "data_rate",
+        "device_class": None,
         "unit":         UOM,
         "icon":         "mdi:upload-network",
         "value_fn":     lambda r: round(r["upload"]["bandwidth"] * 8 / DIVISOR, 2),
@@ -66,7 +66,7 @@ SENSORS = [
     {
         "id":           "ping",
         "name":         "Ping",
-        "device_class": "duration",
+        "device_class": None,
         "unit":         "ms",
         "icon":         "mdi:lan-pending",
         "value_fn":     lambda r: round(r["ping"]["latency"], 2),
@@ -75,7 +75,7 @@ SENSORS = [
     {
         "id":           "jitter",
         "name":         "Jitter",
-        "device_class": "duration",
+        "device_class": None,
         "unit":         "ms",
         "icon":         "mdi:sine-wave",
         "value_fn":     lambda r: round(r["ping"]["jitter"], 2),
@@ -124,7 +124,7 @@ DEVICE_INFO = {
     "name":           "Speedtest MQTT",
     "model":          "Ookla Speedtest CLI",
     "manufacturer":   "Speedtest by Ookla",
-    "sw_version":     "1.5.0",
+    "sw_version":     "1.8.0",
 }
 
 
@@ -277,8 +277,8 @@ def do_run(client):
         log.info(
             "Published → %s/state  down=%.2f %s  up=%.2f %s  ping=%.1f ms",
             TOPIC_PREFIX,
-            state.get("download_speed", 0), UOM,
-            state.get("upload_speed", 0),   UOM,
+            state.get("download", 0), UOM,
+            state.get("upload", 0),   UOM,
             state.get("ping", 0),
         )
     else:
@@ -314,7 +314,7 @@ def stdin_listener():
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 def main():
-    log.info("Speedtest MQTT v1.2.0 starting (interval=%d min, uom=%s)", INTERVAL_MINUTES, UOM)
+    log.info("Speedtest MQTT v1.8.0 starting (interval=%d min, uom=%s)", INTERVAL_MINUTES, UOM)
 
     threading.Thread(target=stdin_listener, daemon=True).start()
 
