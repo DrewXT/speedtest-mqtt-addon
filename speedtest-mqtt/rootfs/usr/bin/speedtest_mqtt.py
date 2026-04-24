@@ -124,7 +124,7 @@ DEVICE_INFO = {
     "name":           "Speedtest MQTT",
     "model":          "Ookla Speedtest CLI",
     "manufacturer":   "Speedtest by Ookla",
-    "sw_version":     "1.8.0",
+    "sw_version":     "1.8.3",
 }
 
 
@@ -170,13 +170,24 @@ def publish_discovery(client):
     if not DISCOVERY_ENABLED:
         return
 
+    # Numeric sensors — each has its own topic so HA tracks last_changed correctly
+    numeric_ids = {"download", "upload", "ping", "jitter"}
+
     for sensor in SENSORS:
         sid = sensor["id"]
+        # Numeric sensors get their own topic; string sensors read from state JSON
+        if sid in numeric_ids:
+            state_topic    = f"{TOPIC_PREFIX}/{sid}"
+            value_template = "{{ value }}"
+        else:
+            state_topic    = f"{TOPIC_PREFIX}/state"
+            value_template = f"{{{{ value_json.{sid} }}}}"
+
         config = {
             "name":               sensor["name"],
             "unique_id":          f"speedtest_mqtt_{sid}",
-            "state_topic":        f"{TOPIC_PREFIX}/state",
-            "value_template":     f"{{{{ value_json.{sid} }}}}",
+            "state_topic":        state_topic,
+            "value_template":     value_template,
             "icon":               sensor["icon"],
             "device":             DEVICE_INFO,
             "availability_topic": f"{TOPIC_PREFIX}/status",
@@ -196,6 +207,24 @@ def publish_discovery(client):
             retain=True,
         )
         log.info("Discovery published → sensor/%s", sid)
+
+    # Last run timestamp sensor
+    client.publish(
+        f"{DISCOVERY_PREFIX}/sensor/speedtest_mqtt_last_run/config",
+        json.dumps({
+            "name":               "Last Run",
+            "unique_id":          "speedtest_mqtt_last_run",
+            "state_topic":        f"{TOPIC_PREFIX}/last_run",
+            "device_class":       "timestamp",
+            "icon":               "mdi:clock-outline",
+            "device":             DEVICE_INFO,
+            "availability_topic": f"{TOPIC_PREFIX}/status",
+            "payload_available":   "online",
+            "payload_not_available": "offline",
+        }),
+        retain=True,
+    )
+    log.info("Discovery published → sensor/last_run")
 
     # Status sensor (idle / running / error)
     client.publish(
@@ -267,12 +296,27 @@ def build_state(raw):
 
 
 def do_run(client):
+    from datetime import datetime, timezone
     client.publish(f"{TOPIC_PREFIX}/running", "running", retain=True)
     raw = run_speedtest()
     if raw:
         state = build_state(raw)
+
+        # Full JSON state retained (used by string/text sensors)
         client.publish(f"{TOPIC_PREFIX}/state", json.dumps(state), retain=True)
         client.publish(f"{TOPIC_PREFIX}/raw",   json.dumps(raw),   retain=True)
+
+        # Individual numeric topics WITHOUT retain so HA registers a state change
+        # each run and last_changed updates correctly
+        for sid in ("download", "upload", "ping", "jitter"):
+            val = state.get(sid)
+            if val is not None:
+                client.publish(f"{TOPIC_PREFIX}/{sid}", str(val), retain=False)
+
+        # Dedicated last_run timestamp — no retain, always a fresh value
+        last_run = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        client.publish(f"{TOPIC_PREFIX}/last_run", last_run, retain=False)
+
         client.publish(f"{TOPIC_PREFIX}/running", "idle", retain=True)
         log.info(
             "Published → %s/state  down=%.2f %s  up=%.2f %s  ping=%.1f ms",
@@ -314,7 +358,7 @@ def stdin_listener():
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 def main():
-    log.info("Speedtest MQTT v1.8.0 starting (interval=%d min, uom=%s)", INTERVAL_MINUTES, UOM)
+    log.info("Speedtest MQTT v1.8.3 starting (interval=%d min, uom=%s)", INTERVAL_MINUTES, UOM)
 
     threading.Thread(target=stdin_listener, daemon=True).start()
 
